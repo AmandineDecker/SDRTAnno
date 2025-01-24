@@ -530,7 +530,7 @@
                                         turn: parseInt(e.split(":")[0].split("-")[1], 10),
                                         label: e.split(":")[1].trim(),
                                         x: 10,
-                                        y: 100 * t,
+                                        y: 50 * t,
                                         useDrag: !0,
                                         orphan: !0
                                     }
