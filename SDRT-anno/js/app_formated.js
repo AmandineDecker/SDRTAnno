@@ -125,6 +125,20 @@
                                         n("code", [e._v(e._s(e.documentName))])
                                     ]), 
                                 n("br"), 
+                                n("v-btn", 
+                                    {
+                                        staticClass: "mb-1 white--text",
+                                        attrs: {
+                                            block: "",
+                                            color: "teal"
+                                        },
+                                        on: {
+                                            click: e.uploadJsonFile
+                                            }
+                                    }, 
+                                    [n("v-icon", [e._v("mdi-upload")]), e._v("Upload existing annotations")], 
+                                    1), 
+                                n("br"), 
                                 n("v-textarea", {
                                     staticStyle: {
                                         "font-family": "monospace"
@@ -516,6 +530,63 @@
                             }),
                             t = document.createElement("a");
                         t.href = e, t.download = "annotations-".concat(this.documentName, ".json"), document.body.appendChild(t), t.click(), document.body.removeChild(t), URL.revokeObjectURL(e)
+                    },
+                    uploadJsonFile: function() {
+                        console.log('In createFileInput');
+                        var input = document.createElement('input');
+                        input.type = 'file';
+                        input.accept = '.json';
+
+                        input.onchange = e => { 
+
+                            // getting a hold of the file reference
+                            var file = e.target.files[0]; 
+
+                            // setting up the reader
+                            var reader = new FileReader();
+                            reader.readAsText(file,'UTF-8');
+                         
+                            // here we tell the reader what to do when it's done reading...
+                            reader.onload = readerEvent => {
+                                var content = readerEvent.target.result; // this is the content!
+                                var json_annotations = JSON.parse(content);
+                                console.log(json_annotations);
+                                this.createInputWithUpload(json_annotations);
+                            }
+                         
+                         }
+
+                        input.click();
+                        
+                    },
+                    createInputWithUpload: function(json_annotations) {
+                        // Create the text to display in Iput based on the id and the edus
+                        var new_text = json_annotations.id + '\n';
+                        json_annotations.edus.forEach(edu => {
+                            new_text += edu.speaker + '-' + edu.turnidx + ': ' + edu.text + '\n';
+                        });
+                        // Paste the text in the Input area
+                        this.inputData = new_text;
+                        // Create the nodes of the graph
+                        this.updateGraph();
+                        var nodes = this.graph.nodes;
+                        // Create the relations of the graph based on the loaded relations
+                        json_annotations.relations.forEach(relation => {
+                            var fromNode = nodes[relation.x - 1];
+                            var toNode = nodes[relation.y - 1];
+                            this.graph.createEdge({
+                                id: b()(),
+                                from: fromNode,
+                                to: toNode,
+                                type: "smooth",
+                                label: relation.type,
+                                toAnchor: { x: "100%", y: "50%" },
+                                fromAnchor: { x: "100%", y: "50%" }
+                            });
+                            this.graph.updateNode(fromNode, { orphan: false });
+                            this.graph.updateNode(toNode, { orphan: false });
+                            this.copyState = "Copy to clipboard";
+                        });
                     },
                     updateGraph: function() {
                         var e = this,
